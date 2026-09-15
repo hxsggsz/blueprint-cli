@@ -12,7 +12,8 @@ type Config struct {
 }
 
 type BluePrintConfig struct {
-	TemplatePath string `json:"template_path"`
+	TemplatePath    string   `json:"template_path"`
+	IgnoreFilePaths []string `json:"ignore_file_paths"`
 }
 
 var bluePrintConfig BluePrintConfig

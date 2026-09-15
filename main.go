@@ -26,7 +26,7 @@ func main() {
 	// 	fmt.Printf("Error trying to get current directory: %v\n", err)
 	// 	return
 	// }
-	c := pkg.NewCopier("destino")
+	c := pkg.NewCopier("destino", bluePrintConfig.IgnoreFilePaths)
 	jobChan := make(chan pkg.CopyJob, 100)
 
 	c.Start(bluePrintConfig.TemplatePath, jobChan)

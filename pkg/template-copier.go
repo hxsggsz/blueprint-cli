@@ -29,13 +29,15 @@ func (j CopyJob) CreateFile() error {
 }
 
 type Copier struct {
-	TargetDir string
-	wg        sync.WaitGroup
+	TargetDir       string
+	IgnoreFilePaths []string
+	wg              sync.WaitGroup
 }
 
-func NewCopier(targetDir string) *Copier {
+func NewCopier(targetDir string, ignoreFilePaths []string) *Copier {
 	return &Copier{
-		TargetDir: targetDir,
+		TargetDir:       targetDir,
+		IgnoreFilePaths: ignoreFilePaths,
 	}
 }
 
@@ -87,8 +89,7 @@ func (c *Copier) ListDir(rootDir string, jobChan chan<- CopyJob) {
 }
 
 func (c *Copier) ignoreFilePath(filePath string) bool {
-	ignoreList := []string{".DS_Store", "Thumbs.db", ".git", ".gitignore", "node_modules", "dist", "build"}
-
+	ignoreList := append(c.IgnoreFilePaths, ".DS_Store", "Thumbs.db", ".git", "node_modules", "dist", "build")
 	return slices.Contains(ignoreList, filePath)
 }
 
