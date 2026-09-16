@@ -81,7 +81,15 @@ setup_templates() {
     echo
     echo "Where are your templates stored?"
     printf "Template repository URL (git, press Enter to skip): "
-    read -r templates_url
+    # Read from /dev/tty so the prompt works when the script is
+    # piped (e.g. `curl ... | bash`), where stdin is the script itself.
+    if [ -t 0 ]; then
+      read -r templates_url
+    elif [ -c /dev/tty ]; then
+      read -r templates_url < /dev/tty
+    else
+      templates_url=""
+    fi
   fi
 
   if [ -z "$templates_url" ]; then
