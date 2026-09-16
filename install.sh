@@ -5,7 +5,6 @@ REPO="hxsggsz/blueprint-cli"
 INSTALL_DIR="${BLUEPRINT_INSTALL_DIR:-$HOME/.local/bin}"
 CONFIG_DIR="${BLUEPRINT_CONFIG_DIR:-$HOME/.config/blueprint}"
 CONFIG_FILE="${CONFIG_DIR}/config.json"
-TEMPLATES_DIR="${BLUEPRINT_TEMPLATES_DIR:-$CONFIG_DIR/templates}"
 
 detect_platform() {
   local os arch
@@ -51,17 +50,18 @@ resolve_version() {
 }
 
 write_config() {
+  local templates_path="$1"
   mkdir -p "$CONFIG_DIR"
 
   if [ -f "$CONFIG_FILE" ]; then
     echo "Config already exists at ${CONFIG_FILE}."
-    echo "Make sure 'template_path' points to ${TEMPLATES_DIR}."
+    echo "Make sure 'template_path' points to ${templates_path}."
     return
   fi
 
   cat > "$CONFIG_FILE" <<EOF
 {
-  "template_path": "${TEMPLATES_DIR}",
+  "template_path": "${templates_path}",
   "ignore_file_paths": []
 }
 EOF
@@ -75,40 +75,33 @@ setup_templates() {
     return
   fi
 
-  local templates_url="${BLUEPRINT_TEMPLATES_URL:-}"
+  local templates_path="${BLUEPRINT_TEMPLATES_PATH:-}"
 
-  if [ -z "$templates_url" ]; then
+  if [ -z "$templates_path" ]; then
     echo
     echo "Where are your templates stored?"
-    printf "Template repository URL (git, press Enter to skip): "
+    printf "Templates directory path (press Enter to skip): "
     # Read from /dev/tty so the prompt works when the script is
     # piped (e.g. `curl ... | bash`), where stdin is the script itself.
     if [ -t 0 ]; then
-      read -r templates_url
+      read -r templates_path
     elif [ -c /dev/tty ]; then
-      read -r templates_url < /dev/tty
+      read -r templates_path < /dev/tty
     else
-      templates_url=""
+      templates_path=""
     fi
   fi
 
-  if [ -z "$templates_url" ]; then
-    echo "No template URL provided. Set 'template_path' in ${CONFIG_FILE} later."
+  if [ -z "$templates_path" ]; then
+    echo "No templates path provided. Set 'template_path' in ${CONFIG_FILE} later."
     return
   fi
 
-  if [ -d "${TEMPLATES_DIR}/.git" ]; then
-    echo "Updating templates in ${TEMPLATES_DIR}..."
-    git -C "$TEMPLATES_DIR" pull --ff-only
-  elif [ -e "$TEMPLATES_DIR" ]; then
-    echo "Error: ${TEMPLATES_DIR} already exists and is not a git repository." >&2
-    exit 1
-  else
-    echo "Cloning templates into ${TEMPLATES_DIR}..."
-    git clone "$templates_url" "$TEMPLATES_DIR"
+  if [ ! -d "$templates_path" ]; then
+    echo "Warning: '${templates_path}' is not an existing directory." >&2
   fi
 
-  write_config
+  write_config "$templates_path"
 }
 
 main() {
