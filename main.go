@@ -11,7 +11,16 @@ import (
 	"time"
 )
 
+// Version is the CLI version, injected at build time via:
+// -ldflags "-X main.Version=vX.Y.Z"
+var Version = "dev"
+
 func main() {
+	if len(os.Args) > 1 && (os.Args[1] == "version" || os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Println(Version)
+		return
+	}
+
 	cfg, err := config.NewConfig()
 	if err != nil {
 		fmt.Printf("Error initializing config: %v\n", err)

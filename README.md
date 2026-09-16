@@ -23,12 +23,35 @@ Blueprint is a lightweight, self-hosted project generator. You maintain your own
 
 ## Installation
 
+### One-liner (Linux / macOS)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hxsggsz/blueprint-cli/main/install.sh | bash
+```
+
+The installer downloads the latest release binary into `~/.local/bin`, then asks for the URL of the repository where your templates are stored and clones it into `~/.config/blueprint/templates`. It then writes the config file pointing `template_path` to that directory.
+
+You can skip or customize the prompts with environment variables:
+
+| Variable | Description |
+|---|---|
+| `BLUEPRINT_TEMPLATES_URL` | Template repository URL (skips the prompt when set) |
+| `BLUEPRINT_SKIP_TEMPLATES=1` | Skip template setup entirely |
+| `BLUEPRINT_INSTALL_DIR` | Override the binary install directory (default `~/.local/bin`) |
+| `BLUEPRINT_CONFIG_DIR` | Override the config directory (default `~/.config/blueprint`) |
+| `BLUEPRINT_TEMPLATES_DIR` | Override the templates clone directory |
+| `BLUEPRINT_VERSION` | Install a specific version instead of the latest release |
+
+### From source
+
 ```bash
 # Build
+make build
+# or
 go build -o blueprint .
 
 # Or run directly
-go run main.go
+make dev
 ```
 
 ## Usage
