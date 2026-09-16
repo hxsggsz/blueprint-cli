@@ -23,18 +23,15 @@ func main() {
 
 	cfg, err := config.NewConfig()
 	if err != nil {
-		fmt.Printf("Error initializing config: %v\n", err)
-		return
+		panic("Error initializing config:")
 	}
 	bluePrintConfig, err := cfg.GetConfig()
 	if err != nil {
-		fmt.Printf("Error getting config: %v\n", err)
-		return
+		panic("Error getting config")
 	}
 	currentDir, err := os.Getwd()
 	if err != nil {
-		fmt.Printf("Error trying to get current directory: %v\n", err)
-		return
+		panic("Error trying to get current directory")
 	}
 	c := pkg.NewCopier(currentDir, bluePrintConfig.IgnoreFilePaths)
 	templates := c.ListTemplates(bluePrintConfig.TemplatePath)
@@ -64,6 +61,10 @@ func main() {
 }
 
 func selectTemplate(templates []string) string {
+	if len(templates) == 0 {
+		panic("No templates found.")
+	}
+
 	fmt.Println("Available templates:")
 	for i, template := range templates {
 		fmt.Printf("%d: %s\n", i+1, template)
