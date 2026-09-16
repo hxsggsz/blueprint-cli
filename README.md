@@ -23,9 +23,13 @@ Blueprint is a lightweight, self-hosted project generator. You maintain your own
 
 ## Installation
 
-https://github.com/hxsggsz/blueprint-cli/blob/main/assets/installing.mp4
 
-<video src="./assets/installing.mp4" controls="controls" muted="muted" loop="loop" playsinline width="100%"></video>
+
+https://github.com/user-attachments/assets/e35a1c8f-49ad-4a0b-a5ab-dd325b38bb0b
+
+
+
+
 
 ### One-liner (Linux / macOS)
 
@@ -59,9 +63,10 @@ make dev
 
 ## Usage
 
-https://github.com/hxsggsz/blueprint-cli/blob/main/assets/how-to-use.mp4
 
-<video src="./assets/how-to-use.mp4" controls="controls" muted="muted" loop="loop" playsinline width="100%"></video>
+https://github.com/user-attachments/assets/a59eba3d-1ce8-4659-81e8-c922c76aeeaa
+
+
 
 1. On first run, the config file is automatically created at `~/.config/blueprint/config.json`. Edit it and set `template_path` to an **absolute path** (this path is resolved independently of your current working directory, so it must be absolute):
 
