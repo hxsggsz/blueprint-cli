@@ -56,6 +56,21 @@ func NewCopier(targetDir string, ignoreFilePaths []string) *Copier {
 		IgnoreFilePaths: allIgnores,
 	}
 }
+func (c *Copier) ListTemplates(currentDir string) []string {
+	templates := make([]string, 0)
+	dirs, err := os.ReadDir(currentDir)
+	if err != nil {
+		fmt.Printf("Error reading directory %s: %v\n", currentDir, err)
+		return []string{}
+	}
+	for _, dir := range dirs {
+		if dir.IsDir() {
+			templates = append(templates, dir.Name())
+		}
+	}
+
+	return templates
+}
 
 func (c *Copier) ListDir(baseDir, currentDir string, jobChan chan<- CopyJob) {
 	defer c.wg.Done()
