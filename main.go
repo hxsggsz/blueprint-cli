@@ -10,7 +10,6 @@ import (
 )
 
 func main() {
-	start := time.Now()
 	cfg, err := config.NewConfig()
 	if err != nil {
 		fmt.Printf("Error initializing config: %v\n", err)
@@ -34,6 +33,7 @@ func main() {
 	numWorkers := runtime.NumCPU() * 2
 	var workerWg sync.WaitGroup
 
+	start := time.Now()
 	for range numWorkers {
 		workerWg.Go(func() {
 			for job := range jobChan {

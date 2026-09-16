@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -16,13 +17,25 @@ type CopyJob struct {
 }
 
 func (j CopyJob) CreateFile() error {
-	content, err := os.ReadFile(j.OriginPath)
+	src, err := os.Open(j.OriginPath)
 	if err != nil {
-		return fmt.Errorf("error trying to read %s: %w", j.OriginPath, err)
+		return fmt.Errorf("error opening source file %s: %w", j.OriginPath, err)
+	}
+	defer src.Close()
+
+	if err := os.MkdirAll(filepath.Dir(j.FinalPath), 0755); err != nil {
+		return fmt.Errorf("error creating parent directory for %s: %w", j.FinalPath, err)
 	}
 
-	if err := os.WriteFile(j.FinalPath, content, j.Mode); err != nil {
-		return fmt.Errorf("error writing %s: %w", j.FinalPath, err)
+	dst, err := os.OpenFile(j.FinalPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, j.Mode)
+	if err != nil {
+		return fmt.Errorf("error creating destination file %s: %w", j.FinalPath, err)
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		return fmt.Errorf("error during streaming to %s: %w", j.FinalPath, err)
 	}
 
 	return nil
@@ -35,34 +48,38 @@ type Copier struct {
 }
 
 func NewCopier(targetDir string, ignoreFilePaths []string) *Copier {
+	defaultIgnores := []string{".DS_Store", "Thumbs.db", ".git", "node_modules", "dist", "build"}
+	allIgnores := append(ignoreFilePaths, defaultIgnores...)
+
 	return &Copier{
 		TargetDir:       targetDir,
-		IgnoreFilePaths: ignoreFilePaths,
+		IgnoreFilePaths: allIgnores,
 	}
 }
 
-func (c *Copier) ListDir(rootDir string, jobChan chan<- CopyJob) {
+func (c *Copier) ListDir(baseDir, currentDir string, jobChan chan<- CopyJob) {
 	defer c.wg.Done()
 
-	dirs, err := os.ReadDir(rootDir)
+	dirs, err := os.ReadDir(currentDir)
 	if err != nil {
-		fmt.Printf("Error reading directory %s: %v\n", rootDir, err)
+		fmt.Printf("Error reading directory %s: %v\n", currentDir, err)
 		return
 	}
 
 	for _, dir := range dirs {
-		fullOriginPath := filepath.Join(rootDir, dir.Name())
-		relPath, err := filepath.Rel(rootDir, fullOriginPath)
+		if c.ignoreFilePath(dir.Name()) {
+			continue
+		}
+
+		fullOriginPath := filepath.Join(currentDir, dir.Name())
+
+		relPath, err := filepath.Rel(baseDir, fullOriginPath)
 		if err != nil {
 			fmt.Printf("Error trying to calculate relative path: %v\n", err)
 			return
 		}
 
 		fullFinalPath := filepath.Join(c.TargetDir, relPath)
-
-		if c.ignoreFilePath(dir.Name()) {
-			continue
-		}
 
 		if dir.IsDir() {
 			info, err := dir.Info()
@@ -71,7 +88,7 @@ func (c *Copier) ListDir(rootDir string, jobChan chan<- CopyJob) {
 			}
 
 			c.wg.Add(1)
-			go c.ListDir(fullOriginPath, jobChan)
+			go c.ListDir(baseDir, fullOriginPath, jobChan)
 		} else {
 			info, err := dir.Info()
 			if err != nil {
@@ -89,13 +106,12 @@ func (c *Copier) ListDir(rootDir string, jobChan chan<- CopyJob) {
 }
 
 func (c *Copier) ignoreFilePath(filePath string) bool {
-	ignoreList := append(c.IgnoreFilePaths, ".DS_Store", "Thumbs.db", ".git", "node_modules", "dist", "build")
-	return slices.Contains(ignoreList, filePath)
+	return slices.Contains(c.IgnoreFilePaths, filePath)
 }
 
 func (c *Copier) Start(rootDir string, jobChan chan CopyJob) {
 	c.wg.Add(1)
-	go c.ListDir(rootDir, jobChan)
+	go c.ListDir(rootDir, rootDir, jobChan)
 
 	go func() {
 		c.wg.Wait()
